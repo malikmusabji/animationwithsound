@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classcheck.in - Interactive Orbit</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.min.js"></script>
+    <style>
+        :root {
+            /* Default Theme Values (Theme 0) */
+            --bg-color: #f0f4ff;
+            --center-bg-color: rgba(255, 255, 255, 0.6);
+            --center-border-color: #4f46e5;
+            --center-text-color: #4f46e5;
+            --subtitle-text-color: #6366f1;
+            --item-bg-color: rgba(255, 255, 255, 0.7);
+            --item-border-color: rgba(79, 70, 229, 0.2);
+            --item-hover-bg-color: rgba(255, 255, 255, 0.95);
+            --item-hover-border-color: #4f46e5;
+            --item-active-bg-color: #10b981;
+            --item-active-border-color: #6ee7b7;
+            --small-icon-bg-color: rgba(129, 140, 248, 0.5);
+            --icon-color-dashboard: #ff4500;
+            --icon-color-ui: #ffd700;
+            --icon-color-streaks: #00ffff;
+            --icon-color-vibes: #32cd32;
+            --icon-color-quickadd: #ff00ff;
+            --icon-color-reflection: #ff69b4;
+            --icon-color-eastereggs: #40e0d0;
+            --icon-color-widgets: #ff8c00;
+            --small-svg-color-1: #f87171;
+            --small-svg-color-2: #fbbf24;
+            --small-svg-color-3: #34d399;
+            --small-svg-color-4: #60a5fa;
+            --small-svg-color-5: #a78bfa;
+            --small-svg-color-6: #f472b6;
+            /* Button colors */
+            --button-bg: #4f46e5;
+            --button-text: #ffffff;
+            --button-hover-bg: #4338ca;
+            --button-disabled-bg: #a5b4fc;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            background-color: var(--bg-color);
+            color: var(--center-text-color);
+            display: flex;
+            flex-direction: column; /* Align items vertically */
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            overflow: hidden;
+            transition: background-color 0.5s ease;
+        }
+
+        .feature-orbit-container {
+            position: relative;
+            width: 450px;
+            height: 450px;
+            margin: 20px auto; /* Reduced margin */
+        }
+
+        .feature-orbit-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            border: 3px solid var(--center-border-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: var(--center-text-color);
+            background-color: var(--center-bg-color);
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55), border-color 0.5s ease, background-color 0.5s ease, color 0.5s ease;
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.2), 0 0 0 5px rgba(79, 70, 229, 0.05);
+            cursor: default;
+            z-index: 10;
+            padding: 15px;
+        }
+
+        .feature-orbit-center-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            line-height: 1.2;
+            margin-bottom: 5px;
+        }
+
+        .feature-orbit-subtitle {
+            font-size: 0.8rem;
+            color: var(--subtitle-text-color);
+            line-height: 1.3;
+             transition: color 0.5s ease;
+        }
+
+        .feature-orbit-item {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--item-bg-color);
+            transition: background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out, border-color 0.3s ease-in-out, opacity 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--item-border-color);
+            backdrop-filter: blur(5px);
+            transform-origin: center center;
+            will-change: transform;
+            z-index: 5;
+        }
+
+        .feature-orbit-container.is-hovering .feature-orbit-item:not(.hover-target) {
+             opacity: 0.6;
+        }
+
+        .feature-orbit-item.hover-target {
+            background-color: var(--item-hover-bg-color);
+            box-shadow: 0 8px 16px rgba(79, 70, 229, 0.25);
+            border-color: var(--item-hover-border-color);
+            z-index: 6;
+            opacity: 1;
+        }
+
+        .feature-orbit-icon {
+            width: 35px;
+            height: 35px;
+            color: var(--icon-color);
+             transition: color 0.5s ease;
+        }
+        [data-feature="dashboard"] .feature-orbit-icon { color: var(--icon-color-dashboard); }
+        [data-feature="ui"] .feature-orbit-icon { color: var(--icon-color-ui); }
+        [data-feature="streaks"] .feature-orbit-icon { color: var(--icon-color-streaks); }
+        [data-feature="vibes"] .feature-orbit-icon { color: var(--icon-color-vibes); }
+        [data-feature="quickadd"] .feature-orbit-icon { color: var(--icon-color-quickadd); }
+        [data-feature="reflection"] .feature-orbit-icon { color: var(--icon-color-reflection); }
+        [data-feature="eastereggs"] .feature-orbit-icon { color: var(--icon-color-eastereggs); }
+        [data-feature="widgets"] .feature-orbit-icon { color: var(--icon-color-widgets); }
+
+        .feature-orbit-item.active {
+            background-color: var(--item-active-bg-color);
+            border-color: var(--item-active-border-color);
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.8), 0 0 10px rgba(255, 255, 255, 0.5) inset;
+        }
+
+        .small-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background-color: var(--small-icon-bg-color);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            z-index: 1;
+            transition: transform 0.2s ease-out, opacity 0.2s ease-out, background-color 0.5s ease;
+            will-change: transform, opacity;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .small-icon svg {
+            width: 8px;
+            height: 8px;
+            transition: fill 0.5s ease;
+        }
+        .small-icon:nth-child(6n+1) svg { fill: var(--small-svg-color-1); }
+        .small-icon:nth-child(6n+2) svg { fill: var(--small-svg-color-2); }
+        .small-icon:nth-child(6n+3) svg { fill: var(--small-svg-color-3); }
+        .small-icon:nth-child(6n+4) svg { fill: var(--small-svg-color-4); }
+        .small-icon:nth-child(6n+5) svg { fill: var(--small-svg-color-5); }
+        .small-icon:nth-child(6n+0) svg { fill: var(--small-svg-color-6); }
+
+        .small-icon.disrupted {
+            transform: scale(0) !important;
+            opacity: 0 !important;
+        }
+
+        @keyframes rotateCenter {
+            0% { transform: translate(-50%, -50%) scale(1.0); }
+            50% { transform: translate(-50%, -50%) scale(1.05); }
+            100% { transform: translate(-50%, -50%) scale(1.0); }
+        }
+
+        .feature-orbit-center.rotate {
+            animation: rotateCenter 0.6s ease-in-out;
+        }
+
+        /* Sound Toggle Button Styles */
+        #sound-toggle {
+            margin-top: 20px; /* Space above button */
+            padding: 8px 16px;
+            border: none;
+            border-radius: 20px; /* Pill shape */
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        #sound-toggle:hover {
+            background-color: var(--button-hover-bg);
+        }
+        #sound-toggle:disabled {
+            background-color: var(--button-disabled-bg);
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        #sound-toggle.sound-enabled {
+             /* Optional: different style when enabled */
+             /* background-color: #10b981; */
+        }
+
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-900">
+    <div class="feature-orbit-container" id="orbit-container">
+        <div class="feature-orbit-center" id="orbit-center">
+        </div>
+
+        <div class="feature-orbit-item" data-feature="dashboard">
+             <svg class="feature-orbit-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+        </div>
+        <div class="feature-orbit-item" data-feature="ui">
+             <svg class="feature-orbit-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M10 3L8.84 7.33 5 8.21l3.16 2.5.19 3.96L12 13.4l3.65 1.27.19-3.96L19 8.21l-3.84-.88L14 3l-1.16 4.33L10 3zm4.79 10.88l-1.13 4.33L12 19.4l-1.66-1.19-1.13-4.33 3.79-.88 3.79.88zM5.16 14.21l.19 3.96L9 19.4l-1.66-1.19L5.16 14.21zm13.68 0l-2.18 3.96L15 19.4l.19-3.96 3.65-1.23z"/></svg>
+        </div>
+        <div class="feature-orbit-item" data-feature="streaks">
+             <svg class="feature-orbit-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+        </div>
+        <div class="feature-orbit-item" data-feature="vibes">
+             <svg class="feature-orbit-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+        </div>
+        <div class="feature-orbit-item" data-feature="quickadd">
+             <svg class="feature-orbit-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 10 20 15 15 20"></polyline><path d="M4 4v7a4 4 0 0 0 4 4h12"></path></svg>
+        </div>
+        <div class="feature-orbit-item" data-feature="reflection">
+             <svg class="feature-orbit-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5zM12 6a6.48 6.48 0 0 0-6 6.48c0 .79.14 1.56.4 2.28l-.46 1.37L4.1 19.9l3.77-1.26a6.48 6.48 0 0 0 7.66 0L19.3 19.9l-1.84-3.77.46-1.37A6.48 6.48 0 0 0 12 6zm1.88 6.13l-1.4 1.41-1.4-1.41a1.93 1.93 0 0 0-2.72 0 1.94 1.94 0 0 0 0 2.72l4.12 4.12 4.12-4.12a1.94 1.94 0 0 0 0-2.72 1.93 1.93 0 0 0-2.72 0z"></path></svg>
+        </div>
+        <div class="feature-orbit-item" data-feature="eastereggs">
+             <svg class="feature-orbit-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M6 3h12l4 6-10 12L2 9l4-6zm1.8 2L4.5 9h15L16.2 5H7.8zM12 10.5l6.4 7.5H5.6L12 10.5z"></path></svg>
+        </div>
+        <div class="feature-orbit-item" data-feature="widgets">
+             <svg class="feature-orbit-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        </div>
+
+        <div id="small-icon-container">
+        </div>
+    </div>
+    <button id="sound-toggle">Enable Sound</button>
+
+    <script>
+        const orbitContainer = document.getElementById('orbit-container');
+        const orbitCenter = document.getElementById('orbit-center');
+        const orbitItems = document.querySelectorAll('.feature-orbit-item');
+        const smallIconContainer = document.getElementById('small-icon-container');
+        const soundToggleButton = document.getElementById('sound-toggle');
+
+        let orbitRadius = 0;
+        let innerRadius = 0;
+        let animationFrameId = null;
+        const rotationSpeed = 0.0005;
+
+        const defaultTitle = "Classcheck.in";
+        const defaultSubtitle = "Explore the Features";
+
+        const NUM_SMALL_ICONS = 6;
+        const SMALL_ICON_SPEED = 0.5;
+        const smallIcons = [];
+
+        const smallIconSVGs = [
+            `<svg viewBox="0 0 10 10"><circle cx="5" cy="5" r="5"/></svg>`,
+            `<svg viewBox="0 0 10 10"><rect width="10" height="10"/></svg>`,
+            `<svg viewBox="0 0 10 10"><polygon points="5 0, 10 10, 0 10"/></svg>`,
+            `<svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`,
+            `<svg viewBox="0 0 24 24"><path d="M17.2 3H6.8l-3.6 6.24v7.52l3.6 6.24h10.4l3.6-6.24v-7.52L17.2 3z"/></svg>`,
+            `<svg viewBox="0 0 10 10"><polygon points="5 0, 10 5, 5 10, 0 5"/></svg>`
+        ];
+
+        const themes = [
+            // --- Original 10 Themes ---
+            { // 0: Default Theme (Light Blue)
+                '--bg-color': '#f0f4ff', '--center-bg-color': 'rgba(255, 255, 255, 0.6)', '--center-border-color': '#4f46e5', '--center-text-color': '#4f46e5', '--subtitle-text-color': '#6366f1', '--item-bg-color': 'rgba(255, 255, 255, 0.7)', '--item-border-color': 'rgba(79, 70, 229, 0.2)', '--item-hover-bg-color': 'rgba(255, 255, 255, 0.95)', '--item-hover-border-color': '#4f46e5', '--item-active-bg-color': '#10b981', '--item-active-border-color': '#6ee7b7', '--small-icon-bg-color': 'rgba(129, 140, 248, 0.5)', '--icon-color-dashboard': '#ff4500', '--icon-color-ui': '#ffd700', '--icon-color-streaks': '#00ffff', '--icon-color-vibes': '#32cd32', '--icon-color-quickadd': '#ff00ff', '--icon-color-reflection': '#ff69b4', '--icon-color-eastereggs': '#40e0d0', '--icon-color-widgets': '#ff8c00', '--small-svg-color-1': '#f87171', '--small-svg-color-2': '#fbbf24', '--small-svg-color-3': '#34d399', '--small-svg-color-4': '#60a5fa', '--small-svg-color-5': '#a78bfa', '--small-svg-color-6': '#f472b6'
+            },
+            { // 1: Dark Theme
+                '--bg-color': '#1f2937', '--center-bg-color': 'rgba(55, 65, 81, 0.7)', '--center-border-color': '#818cf8', '--center-text-color': '#e0e7ff', '--subtitle-text-color': '#a5b4fc', '--item-bg-color': 'rgba(75, 85, 99, 0.6)', '--item-border-color': 'rgba(129, 140, 248, 0.3)', '--item-hover-bg-color': 'rgba(55, 65, 81, 0.9)', '--item-hover-border-color': '#a5b4fc', '--item-active-bg-color': '#34d399', '--item-active-border-color': '#a7f3d0', '--small-icon-bg-color': 'rgba(99, 102, 241, 0.5)', '--icon-color-dashboard': '#fb923c', '--icon-color-ui': '#fde047', '--icon-color-streaks': '#22d3ee', '--icon-color-vibes': '#4ade80', '--icon-color-quickadd': '#f472b6', '--icon-color-reflection': '#fda4af', '--icon-color-eastereggs': '#67e8f9', '--icon-color-widgets': '#fbbf24', '--small-svg-color-1': '#fb7185', '--small-svg-color-2': '#facc15', '--small-svg-color-3': '#4ade80', '--small-svg-color-4': '#38bdf8', '--small-svg-color-5': '#c084fc', '--small-svg-color-6': '#f0abfc',
+            },
+             { // 2: Pastel Theme
+                '--bg-color': '#fff7ed', '--center-bg-color': 'rgba(255, 255, 255, 0.7)', '--center-border-color': '#fbbf24', '--center-text-color': '#d97706', '--subtitle-text-color': '#f59e0b', '--item-bg-color': 'rgba(255, 255, 255, 0.8)', '--item-border-color': 'rgba(251, 191, 36, 0.3)', '--item-hover-bg-color': 'rgba(255, 255, 255, 1)', '--item-hover-border-color': '#f59e0b', '--item-active-bg-color': '#a7f3d0', '--item-active-border-color': '#6ee7b7', '--small-icon-bg-color': 'rgba(253, 186, 116, 0.5)', '--icon-color-dashboard': '#f87171', '--icon-color-ui': '#facc15', '--icon-color-streaks': '#fb923c', '--icon-color-vibes': '#a3e635', '--icon-color-quickadd': '#4ade80', '--icon-color-reflection': '#fb7185', '--icon-color-eastereggs': '#38bdf8', '--icon-color-widgets': '#c084fc', '--small-svg-color-1': '#fda4af', '--small-svg-color-2': '#fde047', '--small-svg-color-3': '#86efac', '--small-svg-color-4': '#7dd3fc', '--small-svg-color-5': '#d8b4fe', '--small-svg-color-6': '#f9a8d4',
+            },
+            { // 3: Neon Glow Theme
+                '--bg-color': '#0f0f0f', '--center-bg-color': 'rgba(17, 24, 39, 0.6)', '--center-border-color': '#00ffff', '--center-text-color': '#f0fdf4', '--subtitle-text-color': '#a7f3d0', '--item-bg-color': 'rgba(31, 41, 55, 0.5)', '--item-border-color': 'rgba(0, 255, 255, 0.3)', '--item-hover-bg-color': 'rgba(17, 24, 39, 0.8)', '--item-hover-border-color': '#00ffff', '--item-active-bg-color': '#ff00ff', '--item-active-border-color': '#f9a8d4', '--small-icon-bg-color': 'rgba(0, 255, 255, 0.3)', '--icon-color-dashboard': '#ff00ff', '--icon-color-ui': '#ffff00', '--icon-color-streaks': '#ff4500', '--icon-color-vibes': '#00ff00', '--icon-color-quickadd': '#00ffff', '--icon-color-reflection': '#ff69b4', '--icon-color-eastereggs': '#7fff00', '--icon-color-widgets': '#ffa500', '--small-svg-color-1': '#ff00ff', '--small-svg-color-2': '#ffff00', '--small-svg-color-3': '#00ff00', '--small-svg-color-4': '#00ffff', '--small-svg-color-5': '#7fff00', '--small-svg-color-6': '#ff69b4'
+            },
+            { // 4: Forest Calm Theme
+                '--bg-color': '#f0fff4', '--center-bg-color': 'rgba(220, 252, 231, 0.7)', '--center-border-color': '#15803d', '--center-text-color': '#14532d', '--subtitle-text-color': '#16a34a', '--item-bg-color': 'rgba(167, 243, 208, 0.6)', '--item-border-color': 'rgba(52, 211, 153, 0.4)', '--item-hover-bg-color': 'rgba(110, 231, 183, 0.8)', '--item-hover-border-color': '#059669', '--item-active-bg-color': '#f59e0b', '--item-active-border-color': '#fcd34d', '--small-icon-bg-color': 'rgba(134, 239, 172, 0.5)', '--icon-color-dashboard': '#ca8a04', '--icon-color-ui': '#059669', '--icon-color-streaks': '#d97706', '--icon-color-vibes': '#16a34a', '--icon-color-quickadd': '#047857', '--icon-color-reflection': '#be123c', '--icon-color-eastereggs': '#0e7490', '--icon-color-widgets': '#a16207', '--small-svg-color-1': '#f87171', '--small-svg-color-2': '#fbbf24', '--small-svg-color-3': '#34d399', '--small-svg-color-4': '#60a5fa', '--small-svg-color-5': '#a78bfa', '--small-svg-color-6': '#f472b6'
+            },
+            { // 5: Oceanic Theme
+                '--bg-color': '#e0f2fe', '--center-bg-color': 'rgba(186, 230, 253, 0.7)', '--center-border-color': '#0ea5e9', '--center-text-color': '#0369a1', '--subtitle-text-color': '#0ea5e9', '--item-bg-color': 'rgba(186, 230, 253, 0.6)', '--item-border-color': 'rgba(56, 189, 248, 0.4)', '--item-hover-bg-color': 'rgba(125, 211, 252, 0.8)', '--item-hover-border-color': '#0284c7', '--item-active-bg-color': '#fef3c7', '--item-active-border-color': '#fcd34d', '--small-icon-bg-color': 'rgba(125, 211, 252, 0.5)', '--icon-color-dashboard': '#0ea5e9', '--icon-color-ui': '#0284c7', '--icon-color-streaks': '#f59e0b', '--icon-color-vibes': '#38bdf8', '--icon-color-quickadd': '#0ea5e9', '--icon-color-reflection': '#7dd3fc', '--icon-color-eastereggs': '#fcd34d', '--icon-color-widgets': '#0369a1', '--small-svg-color-1': '#f87171', '--small-svg-color-2': '#fbbf24', '--small-svg-color-3': '#34d399', '--small-svg-color-4': '#60a5fa', '--small-svg-color-5': '#a78bfa', '--small-svg-color-6': '#f472b6'
+            },
+            { // 6: Sunset Theme
+                '--bg-color': '#fff1f2', '--center-bg-color': 'rgba(255, 228, 230, 0.7)', '--center-border-color': '#f43f5e', '--center-text-color': '#be123c', '--subtitle-text-color': '#f43f5e', '--item-bg-color': 'rgba(255, 228, 230, 0.6)', '--item-border-color': 'rgba(251, 113, 133, 0.4)', '--item-hover-bg-color': 'rgba(254, 205, 211, 0.8)', '--item-hover-border-color': '#e11d48', '--item-active-bg-color': '#fde68a', '--item-active-border-color': '#facc15', '--small-icon-bg-color': 'rgba(251, 113, 133, 0.5)', '--icon-color-dashboard': '#f43f5e', '--icon-color-ui': '#e11d48', '--icon-color-streaks': '#fb923c', '--icon-color-vibes': '#f97316', '--icon-color-quickadd': '#be123c', '--icon-color-reflection': '#fb7185', '--icon-color-eastereggs': '#facc15', '--icon-color-widgets': '#ea580c', '--small-svg-color-1': '#f87171', '--small-svg-color-2': '#fbbf24', '--small-svg-color-3': '#34d399', '--small-svg-color-4': '#60a5fa', '--small-svg-color-5': '#a78bfa', '--small-svg-color-6': '#f472b6'
+            },
+            { // 7: Monochrome Theme
+                '--bg-color': '#e5e7eb', '--center-bg-color': 'rgba(243, 244, 246, 0.7)', '--center-border-color': '#4b5563', '--center-text-color': '#1f2937', '--subtitle-text-color': '#4b5563', '--item-bg-color': 'rgba(229, 231, 235, 0.6)', '--item-border-color': 'rgba(107, 114, 128, 0.4)', '--item-hover-bg-color': 'rgba(209, 213, 219, 0.8)', '--item-hover-border-color': '#374151', '--item-active-bg-color': '#6b7280', '--item-active-border-color': '#9ca3af', '--small-icon-bg-color': 'rgba(156, 163, 175, 0.5)', '--icon-color-dashboard': '#1f2937', '--icon-color-ui': '#374151', '--icon-color-streaks': '#4b5563', '--icon-color-vibes': '#6b7280', '--icon-color-quickadd': '#111827', '--icon-color-reflection': '#374151', '--icon-color-eastereggs': '#4b5563', '--icon-color-widgets': '#1f2937', '--small-svg-color-1': '#6b7280', '--small-svg-color-2': '#4b5563', '--small-svg-color-3': '#374151', '--small-svg-color-4': '#1f2937', '--small-svg-color-5': '#111827', '--small-svg-color-6': '#9ca3af'
+            },
+             { // 8: Candy Theme
+                '--bg-color': '#fce7f3', '--center-bg-color': 'rgba(253, 230, 242, 0.7)', '--center-border-color': '#ec4899', '--center-text-color': '#be185d', '--subtitle-text-color': '#db2777', '--item-bg-color': 'rgba(253, 230, 242, 0.6)', '--item-border-color': 'rgba(244, 114, 182, 0.4)', '--item-hover-bg-color': 'rgba(251, 207, 232, 0.8)', '--item-hover-border-color': '#db2777', '--item-active-bg-color': '#a5b4fc', '--item-active-border-color': '#c7d2fe', '--small-icon-bg-color': 'rgba(244, 114, 182, 0.5)', '--icon-color-dashboard': '#ec4899', '--icon-color-ui': '#d946ef', '--icon-color-streaks': '#f472b6', '--icon-color-vibes': '#a855f7', '--icon-color-quickadd': '#be185d', '--icon-color-reflection': '#db2777', '--icon-color-eastereggs': '#8b5cf6', '--icon-color-widgets': '#c026d3', '--small-svg-color-1': '#f87171', '--small-svg-color-2': '#fbbf24', '--small-svg-color-3': '#34d399', '--small-svg-color-4': '#60a5fa', '--small-svg-color-5': '#a78bfa', '--small-svg-color-6': '#f472b6'
+            },
+             { // 9: Retro Theme
+                '--bg-color': '#f5f5f4', '--center-bg-color': 'rgba(231, 229, 228, 0.7)', '--center-border-color': '#a16207', '--center-text-color': '#44403c', '--subtitle-text-color': '#78716c', '--item-bg-color': 'rgba(214, 211, 209, 0.6)', '--item-border-color': 'rgba(168, 162, 158, 0.4)', '--item-hover-bg-color': 'rgba(214, 211, 209, 0.8)', '--item-hover-border-color': '#57534e', '--item-active-bg-color': '#ea580c', '--item-active-border-color': '#fb923c', '--small-icon-bg-color': 'rgba(168, 162, 158, 0.5)', '--icon-color-dashboard': '#ea580c', '--icon-color-ui': '#ca8a04', '--icon-color-streaks': '#a16207', '--icon-color-vibes': '#dc2626', '--icon-color-quickadd': '#57534e', '--icon-color-reflection': '#78716c', '--icon-color-eastereggs': '#fb923c', '--icon-color-widgets': '#44403c', '--small-svg-color-1': '#f87171', '--small-svg-color-2': '#fbbf24', '--small-svg-color-3': '#34d399', '--small-svg-color-4': '#60a5fa', '--small-svg-color-5': '#a78bfa', '--small-svg-color-6': '#f472b6'
+            },
+            // --- 10 New Themes Start Here ---
+            { // 10: Nebula Theme
+                '--bg-color': '#0b0014', '--center-bg-color': 'rgba(45, 20, 70, 0.7)', '--center-border-color': '#a78bfa', '--center-text-color': '#ede9fe', '--subtitle-text-color': '#c4b5fd', '--item-bg-color': 'rgba(67, 56, 202, 0.5)', '--item-border-color': 'rgba(129, 140, 248, 0.4)', '--item-hover-bg-color': 'rgba(79, 70, 229, 0.8)', '--item-hover-border-color': '#a78bfa', '--item-active-bg-color': '#f472b6', '--item-active-border-color': '#fbcfe8', '--small-icon-bg-color': 'rgba(167, 139, 250, 0.5)', '--icon-color-dashboard': '#f472b6', '--icon-color-ui': '#c084fc', '--icon-color-streaks': '#a78bfa', '--icon-color-vibes': '#818cf8', '--icon-color-quickadd': '#f0abfc', '--icon-color-reflection': '#c4b5fd', '--icon-color-eastereggs': '#d8b4fe', '--icon-color-widgets': '#a5b4fc', '--small-svg-color-1': '#f87171', '--small-svg-color-2': '#fbbf24', '--small-svg-color-3': '#34d399', '--small-svg-color-4': '#60a5fa', '--small-svg-color-5': '#a78bfa', '--small-svg-color-6': '#f472b6'
+            },
+            { // 11: Glitch Matrix Theme
+                '--bg-color': '#000000', '--center-bg-color': 'rgba(10, 30, 10, 0.7)', '--center-border-color': '#00ff00', '--center-text-color': '#00ff00', '--subtitle-text-color': '#32cd32', '--item-bg-color': 'rgba(0, 50, 0, 0.5)', '--item-border-color': 'rgba(0, 255, 0, 0.4)', '--item-hover-bg-color': 'rgba(0, 80, 0, 0.8)', '--item-hover-border-color': '#39ff14', '--item-active-bg-color': '#ff00ff', '--item-active-border-color': '#00ffff', '--small-icon-bg-color': 'rgba(0, 255, 0, 0.5)', '--icon-color-dashboard': '#00ff00', '--icon-color-ui': '#39ff14', '--icon-color-streaks': '#00ff00', '--icon-color-vibes': '#32cd32', '--icon-color-quickadd': '#00ff00', '--icon-color-reflection': '#39ff14', '--icon-color-eastereggs': '#00ff00', '--icon-color-widgets': '#32cd32', '--small-svg-color-1': '#ff00ff', '--small-svg-color-2': '#00ffff', '--small-svg-color-3': '#ffff00', '--small-svg-color-4': '#ff00ff', '--small-svg-color-5': '#00ffff', '--small-svg-color-6': '#ffff00'
+            },
+            { // 12: Enchanted Forest Theme (Revisit of 4)
+                '--bg-color': '#eefbf3', '--center-bg-color': 'rgba(200, 230, 201, 0.7)', '--center-border-color': '#556b2f', '--center-text-color': '#2f4f4f', '--subtitle-text-color': '#8fbc8f', '--item-bg-color': 'rgba(170, 200, 170, 0.6)', '--item-border-color': 'rgba(100, 140, 100, 0.4)', '--item-hover-bg-color': 'rgba(140, 170, 140, 0.8)', '--item-hover-border-color': '#556b2f', '--item-active-bg-color': '#ffd700', '--item-active-border-color': '#fffacd', '--small-icon-bg-color': 'rgba(144, 238, 144, 0.5)', '--icon-color-dashboard': '#8b4513', '--icon-color-ui': '#2e8b57', '--icon-color-streaks': '#daa520', '--icon-color-vibes': '#556b2f', '--icon-color-quickadd': '#6b8e23', '--icon-color-reflection': '#cd853f', '--icon-color-eastereggs': '#bdb76b', '--icon-color-widgets': '#8fbc8f', '--small-svg-color-1': '#f87171', '--small-svg-color-2': '#fbbf24', '--small-svg-color-3': '#34d399', '--small-svg-color-4': '#60a5fa', '--small-svg-color-5': '#a78bfa', '--small-svg-color-6': '#f472b6'
+            },
+            { // 13: Crystal Cave Theme
+                '--bg-color': '#eef2f9', '--center-bg-color': 'rgba(210, 220, 250, 0.7)', '--center-border-color': '#7aa2f7', '--center-text-color': '#3b5998', '--subtitle-text-color': '#8fa8e0', '--item-bg-color': 'rgba(200, 210, 240, 0.6)', '--item-border-color': 'rgba(150, 180, 240, 0.4)', '--item-hover-bg-color': 'rgba(180, 200, 250, 0.8)', '--item-hover-border-color': '#7aa2f7', '--item-active-bg-color': '#bb9af7', '--item-active-border-color': '#e0d5f9', '--small-icon-bg-color': 'rgba(190, 210, 255, 0.5)', '--icon-color-dashboard': '#7dcfff', '--icon-color-ui': '#bb9af7', '--icon-color-streaks': '#c0caf5', '--icon-color-vibes': '#7aa2f7', '--icon-color-quickadd': '#9ece6a', '--icon-color-reflection': '#e0af68', '--icon-color-eastereggs': '#ff9e64', '--icon-color-widgets': '#f7768e', '--small-svg-color-1': '#f87171', '--small-svg-color-2': '#fbbf24', '--small-svg-color-3': '#34d399', '--small-svg-color-4': '#60a5fa', '--small-svg-color-5': '#a78bfa', '--small-svg-color-6': '#f472b6'
+            },
+            { // 14: Volcanic Core Theme
+                '--bg-color': '#2d1418', '--center-bg-color': 'rgba(60, 20, 25, 0.7)', '--center-border-color': '#ff4500', '--center-text-color': '#ffcc00', '--subtitle-text-color': '#ff7f50', '--item-bg-color': 'rgba(90, 30, 35, 0.6)', '--item-border-color': 'rgba(255, 100, 0, 0.4)', '--item-hover-bg-color': 'rgba(120, 40, 45, 0.8)', '--item-hover-border-color': '#ff4500', '--item-active-bg-color': '#ffcc00', '--item-active-border-color': '#ffff99', '--small-icon-bg-color': 'rgba(255, 100, 0, 0.5)', '--icon-color-dashboard': '#ff4500', '--icon-color-ui': '#ff7f50', '--icon-color-streaks': '#ff8c00', '--icon-color-vibes': '#dc143c', '--icon-color-quickadd': '#b22222', '--icon-color-reflection': '#ffcc00', '--icon-color-eastereggs': '#ffdb58', '--icon-color-widgets': '#ff4500', '--small-svg-color-1': '#f87171', '--small-svg-color-2': '#fbbf24', '--small-svg-color-3': '#34d399', '--small-svg-color-4': '#60a5fa', '--small-svg-color-5': '#a78bfa', '--small-svg-color-6': '#f472b6'
+            },
+            { // 15: Deep Sea Trench Theme
+                '--bg-color': '#000033', '--center-bg-color': 'rgba(0, 50, 100, 0.7)', '--center-border-color': '#00ced1', '--center-text-color': '#afeeee', '--subtitle-text-color': '#40e0d0', '--item-bg-color': 'rgba(0, 80, 120, 0.6)', '--item-border-color': 'rgba(0, 150, 180, 0.4)', '--item-hover-bg-color': 'rgba(0, 100, 150, 0.8)', '--item-hover-border-color': '#00ced1', '--item-active-bg-color': '#7fffd4', '--item-active-border-color': '#e0ffff', '--small-icon-bg-color': 'rgba(0, 200, 200, 0.5)', '--icon-color-dashboard': '#40e0d0', '--icon-color-ui': '#00ced1', '--icon-color-streaks': '#afeeee', '--icon-color-vibes': '#7fffd4', '--icon-color-quickadd': '#20b2aa', '--icon-color-reflection': '#5f9ea0', '--icon-color-eastereggs': '#00ffff', '--icon-color-widgets': '#48d1cc', '--small-svg-color-1': '#f87171', '--small-svg-color-2': '#fbbf24', '--small-svg-color-3': '#34d399', '--small-svg-color-4': '#60a5fa', '--small-svg-color-5': '#a78bfa', '--small-svg-color-6': '#f472b6'
+            },
+            { // 16: Steampunk Gears Theme
+                '--bg-color': '#e1d8c9', '--center-bg-color': 'rgba(180, 160, 140, 0.7)', '--center-border-color': '#8b4513', '--center-text-color': '#cd853f', '--subtitle-text-color': '#a0522d', '--item-bg-color': 'rgba(160, 140, 120, 0.6)', '--item-border-color': 'rgba(139, 69, 19, 0.4)', '--item-hover-bg-color': 'rgba(140, 120, 100, 0.8)', '--item-hover-border-color': '#8b4513', '--item-active-bg-color': '#daa520', '--item-active-border-color': '#f4a460', '--small-icon-bg-color': 'rgba(205, 133, 63, 0.5)', '--icon-color-dashboard': '#8b4513', '--icon-color-ui': '#a0522d', '--icon-color-streaks': '#cd853f', '--icon-color-vibes': '#daa520', '--icon-color-quickadd': '#b8860b', '--icon-color-reflection': '#d2691e', '--icon-color-eastereggs': '#f4a460', '--icon-color-widgets': '#8b4513', '--small-svg-color-1': '#f87171', '--small-svg-color-2': '#fbbf24', '--small-svg-color-3': '#34d399', '--small-svg-color-4': '#60a5fa', '--small-svg-color-5': '#a78bfa', '--small-svg-color-6': '#f472b6'
+            },
+             { // 17: Iridescent Theme
+                '--bg-color': '#f0f0f0', '--center-bg-color': 'rgba(220, 220, 255, 0.7)', '--center-border-color': '#ff69b4', '--center-text-color': '#8a2be2', '--subtitle-text-color': '#ba55d3', '--item-bg-color': 'rgba(230, 230, 250, 0.6)', '--item-border-color': 'rgba(186, 85, 211, 0.4)', '--item-hover-bg-color': 'rgba(210, 210, 255, 0.8)', '--item-hover-border-color': '#ff1493', '--item-active-bg-color': '#00ced1', '--item-active-border-color': '#afeeee', '--small-icon-bg-color': 'rgba(150, 150, 255, 0.5)', '--icon-color-dashboard': '#ff1493', '--icon-color-ui': '#ba55d3', '--icon-color-streaks': '#8a2be2', '--icon-color-vibes': '#00ced1', '--icon-color-quickadd': '#40e0d0', '--icon-color-reflection': '#ff69b4', '--icon-color-eastereggs': '#dda0dd', '--icon-color-widgets': '#9370db', '--small-svg-color-1': '#f87171', '--small-svg-color-2': '#fbbf24', '--small-svg-color-3': '#34d399', '--small-svg-color-4': '#60a5fa', '--small-svg-color-5': '#a78bfa', '--small-svg-color-6': '#f472b6'
+            },
+            { // 18: Liquid Metal Theme
+                '--bg-color': '#333333', '--center-bg-color': 'rgba(100, 100, 100, 0.7)', '--center-border-color': '#c0c0c0', '--center-text-color': '#f5f5f5', '--subtitle-text-color': '#dcdcdc', '--item-bg-color': 'rgba(150, 150, 150, 0.6)', '--item-border-color': 'rgba(192, 192, 192, 0.4)', '--item-hover-bg-color': 'rgba(170, 170, 170, 0.8)', '--item-hover-border-color': '#c0c0c0', '--item-active-bg-color': '#808080', '--item-active-border-color': '#a9a9a9', '--small-icon-bg-color': 'rgba(192, 192, 192, 0.5)', '--icon-color-dashboard': '#c0c0c0', '--icon-color-ui': '#dcdcdc', '--icon-color-streaks': '#f5f5f5', '--icon-color-vibes': '#a9a9a9', '--icon-color-quickadd': '#808080', '--icon-color-reflection': '#c0c0c0', '--icon-color-eastereggs': '#dcdcdc', '--icon-color-widgets': '#f5f5f5', '--small-svg-color-1': '#f87171', '--small-svg-color-2': '#fbbf24', '--small-svg-color-3': '#34d399', '--small-svg-color-4': '#60a5fa', '--small-svg-color-5': '#a78bfa', '--small-svg-color-6': '#f472b6'
+            },
+            { // 19: Aurora Borealis Theme
+                '--bg-color': '#001020', '--center-bg-color': 'rgba(10, 30, 50, 0.7)', '--center-border-color': '#7df9ff', '--center-text-color': '#ccffcc', '--subtitle-text-color': '#90ee90', '--item-bg-color': 'rgba(20, 50, 80, 0.6)', '--item-border-color': 'rgba(125, 249, 255, 0.4)', '--item-hover-bg-color': 'rgba(30, 70, 100, 0.8)', '--item-hover-border-color': '#7df9ff', '--item-active-bg-color': '#ff6eff', '--item-active-border-color': '#ffccff', '--small-icon-bg-color': 'rgba(144, 238, 144, 0.5)', '--icon-color-dashboard': '#7df9ff', '--icon-color-ui': '#90ee90', '--icon-color-streaks': '#ff6eff', '--icon-color-vibes': '#ccffcc', '--icon-color-quickadd': '#7df9ff', '--icon-color-reflection': '#90ee90', '--icon-color-eastereggs': '#ff6eff', '--icon-color-widgets': '#ccffcc', '--small-svg-color-1': '#f87171', '--small-svg-color-2': '#fbbf24', '--small-svg-color-3': '#34d399', '--small-svg-color-4': '#60a5fa', '--small-svg-color-5': '#a78bfa', '--small-svg-color-6': '#f472b6'
+            },
+             // --- 10 More New Themes ---
+            { // 20: Alien Planet Theme
+                '--bg-color': '#1d1f2d', '--center-bg-color': 'rgba(50, 50, 90, 0.7)', '--center-border-color': '#39ff14', '--center-text-color': '#afeeee', '--subtitle-text-color': '#7fffd4', '--item-bg-color': 'rgba(70, 70, 110, 0.6)', '--item-border-color': 'rgba(120, 250, 120, 0.4)', '--item-hover-bg-color': 'rgba(90, 90, 130, 0.8)', '--item-hover-border-color': '#39ff14', '--item-active-bg-color': '#ff1493', '--item-active-border-color': '#ff69b4', '--small-icon-bg-color': 'rgba(127, 255, 212, 0.5)', '--icon-color-dashboard': '#39ff14', '--icon-color-ui': '#7fffd4', '--icon-color-streaks': '#afeeee', '--icon-color-vibes': '#ff1493', '--icon-color-quickadd': '#00ced1', '--icon-color-reflection': '#90ee90', '--icon-color-eastereggs': '#ff69b4', '--icon-color-widgets': '#7df9ff', '--small-svg-color-1': '#f87171', '--small-svg-color-2': '#fbbf24', '--small-svg-color-3': '#34d399', '--small-svg-color-4': '#60a5fa', '--small-svg-color-5': '#a78bfa', '--small-svg-color-6': '#f472b6'
+            },
+            { // 21: Starship Bridge Theme
+                '--bg-color': '#2c3e50', '--center-bg-color': 'rgba(75, 95, 115, 0.7)', '--center-border-color': '#ecf0f1', '--center-text-color': '#3498db', '--subtitle-text-color': '#95a5a6', '--item-bg-color': 'rgba(100, 120, 140, 0.6)', '--item-border-color': 'rgba(189, 195, 199, 0.4)', '--item-hover-bg-color': 'rgba(120, 140, 160, 0.8)', '--item-hover-border-color': '#ecf0f1', '--item-active-bg-color': '#e74c3c', '--item-active-border-color': '#f1c40f', '--small-icon-bg-color': 'rgba(149, 165, 166, 0.5)', '--icon-color-dashboard': '#3498db', '--icon-color-ui': '#ecf0f1', '--icon-color-streaks': '#f1c40f', '--icon-color-vibes': '#2ecc71', '--icon-color-quickadd': '#e74c3c', '--icon-color-reflection': '#9b59b6', '--icon-color-eastereggs': '#1abc9c', '--icon-color-widgets': '#3498db', '--small-svg-color-1': '#f87171', '--small-svg-color-2': '#fbbf24', '--small-svg-color-3': '#34d399', '--small-svg-color-4': '#60a5fa', '--small-svg-color-5': '#a78bfa', '--small-svg-color-6': '#f472b6'
+            },
+            { // 22: Bioluminescent Flora Theme
+                '--bg-color': '#0a1f0f', '--center-bg-color': 'rgba(10, 50, 20, 0.7)', '--center-border-color': '#7fff00', '--center-text-color': '#ccffdd', '--subtitle-text-color': '#98fb98', '--item-bg-color': 'rgba(20, 70, 30, 0.6)', '--item-border-color': 'rgba(127, 255, 0, 0.4)', '--item-hover-bg-color': 'rgba(30, 90, 40, 0.8)', '--item-hover-border-color': '#7fff00', '--item-active-bg-color': '#00ffff', '--item-active-border-color': '#e0ffff', '--small-icon-bg-color': 'rgba(152, 251, 152, 0.5)', '--icon-color-dashboard': '#7fff00', '--icon-color-ui': '#98fb98', '--icon-color-streaks': '#adff2f', '--icon-color-vibes': '#00fa9a', '--icon-color-quickadd': '#00ffff', '--icon-color-reflection': '#7cfc00', '--icon-color-eastereggs': '#32cd32', '--icon-color-widgets': '#ccffdd', '--small-svg-color-1': '#f87171', '--small-svg-color-2': '#fbbf24', '--small-svg-color-3': '#34d399', '--small-svg-color-4': '#60a5fa', '--small-svg-color-5': '#a78bfa', '--small-svg-color-6': '#f472b6'
+            },
+            { // 23: Dreamscape Theme
+                '--bg-color': '#e6e6fa', '--center-bg-color': 'rgba(255, 240, 245, 0.7)', '--center-border-color': '#dda0dd', '--center-text-color': '#8a2be2', '--subtitle-text-color': '#ba55d3', '--item-bg-color': 'rgba(240, 248, 255, 0.6)', '--item-border-color': 'rgba(221, 160, 221, 0.4)', '--item-hover-bg-color': 'rgba(230, 230, 250, 0.8)', '--item-hover-border-color': '#dda0dd', '--item-active-bg-color': '#ffb6c1', '--item-active-border-color': '#ffc0cb', '--small-icon-bg-color': 'rgba(255, 182, 193, 0.5)', '--icon-color-dashboard': '#8a2be2', '--icon-color-ui': '#ba55d3', '--icon-color-streaks': '#dda0dd', '--icon-color-vibes': '#ff69b4', '--icon-color-quickadd': '#db7093', '--icon-color-reflection': '#dda0dd', '--icon-color-eastereggs': '#ee82ee', '--icon-color-widgets': '#da70d6', '--small-svg-color-1': '#f87171', '--small-svg-color-2': '#fbbf24', '--small-svg-color-3': '#34d399', '--small-svg-color-4': '#60a5fa', '--small-svg-color-5': '#a78bfa', '--small-svg-color-6': '#f472b6'
+            },
+            { // 24: Geometric Chaos Theme
+                '--bg-color': '#fafafa', '--center-bg-color': 'rgba(220, 220, 220, 0.7)', '--center-border-color': '#ff3d00', '--center-text-color': '#212121', '--subtitle-text-color': '#757575', '--item-bg-color': 'rgba(230, 230, 230, 0.6)', '--item-border-color': 'rgba(255, 61, 0, 0.4)', '--item-hover-bg-color': 'rgba(200, 200, 200, 0.8)', '--item-hover-border-color': '#ff3d00', '--item-active-bg-color': '#00e5ff', '--item-active-border-color': '#18ffff', '--small-icon-bg-color': 'rgba(170, 170, 170, 0.5)', '--icon-color-dashboard': '#ff3d00', '--icon-color-ui': '#ffab00', '--icon-color-streaks': '#00e5ff', '--icon-color-vibes': '#76ff03', '--icon-color-quickadd': '#d500f9', '--icon-color-reflection': '#651fff', '--icon-color-eastereggs': '#00e5ff', '--icon-color-widgets': '#ff3d00', '--small-svg-color-1': '#f87171', '--small-svg-color-2': '#fbbf24', '--small-svg-color-3': '#34d399', '--small-svg-color-4': '#60a5fa', '--small-svg-color-5': '#a78bfa', '--small-svg-color-6': '#f472b6'
+            },
+            { // 25: Black Hole Theme
+                '--bg-color': '#000000', '--center-bg-color': 'rgba(20, 0, 30, 0.7)', '--center-border-color': '#4b0082', '--center-text-color': '#ffffff', '--subtitle-text-color': '#dda0dd', '--item-bg-color': 'rgba(50, 0, 70, 0.6)', '--item-border-color': 'rgba(138, 43, 226, 0.4)', '--item-hover-bg-color': 'rgba(70, 0, 90, 0.8)', '--item-hover-border-color': '#8a2be2', '--item-active-bg-color': '#ff00ff', '--item-active-border-color': '#ff69b4', '--small-icon-bg-color': 'rgba(100, 0, 120, 0.5)', '--icon-color-dashboard': '#ffffff', '--icon-color-ui': '#dda0dd', '--icon-color-streaks': '#ff00ff', '--icon-color-vibes': '#8a2be2', '--icon-color-quickadd': '#4b0082', '--icon-color-reflection': '#ffffff', '--icon-color-eastereggs': '#dda0dd', '--icon-color-widgets': '#ff00ff', '--small-svg-color-1': '#f87171', '--small-svg-color-2': '#fbbf24', '--small-svg-color-3': '#34d399', '--small-svg-color-4': '#60a5fa', '--small-svg-color-5': '#a78bfa', '--small-svg-color-6': '#f472b6'
+            },
+            { // 26: Fairy Glen Theme
+                '--bg-color': '#f0fff0', '--center-bg-color': 'rgba(240, 255, 240, 0.7)', '--center-border-color': '#ff69b4', '--center-text-color': '#2e8b57', '--subtitle-text-color': '#98fb98', '--item-bg-color': 'rgba(220, 255, 220, 0.6)', '--item-border-color': 'rgba(255, 182, 193, 0.4)', '--item-hover-bg-color': 'rgba(200, 255, 200, 0.8)', '--item-hover-border-color': '#ff69b4', '--item-active-bg-color': '#dda0dd', '--item-active-border-color': '#ee82ee', '--small-icon-bg-color': 'rgba(255, 192, 203, 0.5)', '--icon-color-dashboard': '#ff69b4', '--icon-color-ui': '#ee82ee', '--icon-color-streaks': '#da70d6', '--icon-color-vibes': '#98fb98', '--icon-color-quickadd': '#2e8b57', '--icon-color-reflection': '#dda0dd', '--icon-color-eastereggs': '#ffb6c1', '--icon-color-widgets': '#db7093', '--small-svg-color-1': '#f87171', '--small-svg-color-2': '#fbbf24', '--small-svg-color-3': '#34d399', '--small-svg-color-4': '#60a5fa', '--small-svg-color-5': '#a78bfa', '--small-svg-color-6': '#f472b6'
+            },
+            { // 27: Dragon's Lair Theme
+                '--bg-color': '#3b0f0f', '--center-bg-color': 'rgba(100, 20, 20, 0.7)', '--center-border-color': '#ffd700', '--center-text-color': '#ffebcd', '--subtitle-text-color': '#f4a460', '--item-bg-color': 'rgba(139, 0, 0, 0.6)', '--item-border-color': 'rgba(255, 215, 0, 0.4)', '--item-hover-bg-color': 'rgba(165, 42, 42, 0.8)', '--item-hover-border-color': '#ffd700', '--item-active-bg-color': '#ff4500', '--item-active-border-color': '#ff8c00', '--small-icon-bg-color': 'rgba(218, 165, 32, 0.5)', '--icon-color-dashboard': '#ffd700', '--icon-color-ui': '#f4a460', '--icon-color-streaks': '#ff8c00', '--icon-color-vibes': '#dc143c', '--icon-color-quickadd': '#b22222', '--icon-color-reflection': '#cd5c5c', '--icon-color-eastereggs': '#daa520', '--icon-color-widgets': '#ff4500', '--small-svg-color-1': '#f87171', '--small-svg-color-2': '#fbbf24', '--small-svg-color-3': '#34d399', '--small-svg-color-4': '#60a5fa', '--small-svg-color-5': '#a78bfa', '--small-svg-color-6': '#f472b6'
+            },
+             { // 28: Holodeck Theme
+                '--bg-color': '#000000', '--center-bg-color': 'rgba(20, 20, 20, 0.7)', '--center-border-color': '#0077cc', '--center-text-color': '#ffffff', '--subtitle-text-color': '#cccccc', '--item-bg-color': 'rgba(40, 40, 40, 0.6)', '--item-border-color': 'rgba(0, 119, 204, 0.4)', '--item-hover-bg-color': 'rgba(60, 60, 60, 0.8)', '--item-hover-border-color': '#0077cc', '--item-active-bg-color': '#cc0000', '--item-active-border-color': '#ff3333', '--small-icon-bg-color': 'rgba(0, 119, 204, 0.5)', '--icon-color-dashboard': '#0077cc', '--icon-color-ui': '#ffffff', '--icon-color-streaks': '#cc0000', '--icon-color-vibes': '#00aa00', '--icon-color-quickadd': '#dddd00', '--icon-color-reflection': '#ffffff', '--icon-color-eastereggs': '#cc0000', '--icon-color-widgets': '#0077cc', '--small-svg-color-1': '#f87171', '--small-svg-color-2': '#fbbf24', '--small-svg-color-3': '#34d399', '--small-svg-color-4': '#60a5fa', '--small-svg-color-5': '#a78bfa', '--small-svg-color-6': '#f472b6'
+            },
+             { // 29: Supernova Theme
+                '--bg-color': '#fff8dc', '--center-bg-color': 'rgba(255, 220, 180, 0.7)', '--center-border-color': '#ff4500', '--center-text-color': '#ff6347', '--subtitle-text-color': '#ff7f50', '--item-bg-color': 'rgba(255, 200, 150, 0.6)', '--item-border-color': 'rgba(255, 165, 0, 0.4)', '--item-hover-bg-color': 'rgba(255, 180, 120, 0.8)', '--item-hover-border-color': '#ff4500', '--item-active-bg-color': '#ffff00', '--item-active-border-color': '#fffacd', '--small-icon-bg-color': 'rgba(255, 165, 0, 0.5)', '--icon-color-dashboard': '#ff4500', '--icon-color-ui': '#ff6347', '--icon-color-streaks': '#ff7f50', '--icon-color-vibes': '#ffa500', '--icon-color-quickadd': '#ffd700', '--icon-color-reflection': '#ffff00', '--icon-color-eastereggs': '#ffdab9', '--icon-color-widgets': '#ff8c00', '--small-svg-color-1': '#f87171', '--small-svg-color-2': '#fbbf24', '--small-svg-color-3': '#34d399', '--small-svg-color-4': '#60a5fa', '--small-svg-color-5': '#a78bfa', '--small-svg-color-6': '#f472b6'
+            }
+        ];
+        let currentThemeIndex = 0;
+
+        // Removed sound-related code
+
+        function getFeatureTitle(feature) {
+             switch (feature) {
+                case "dashboard": return "Personal Dashboard";
+                case "ui": return "Aesthetic UI";
+                case "streaks": return "Streaks & Motivation";
+                case "vibes": return "Study Vibes";
+                case "quickadd": return "Quick Add";
+                case "reflection": return "Daily Reflection";
+                case "eastereggs": return "Easter Eggs";
+                case "widgets": return "Widgets";
+                default: return defaultTitle;
+            }
+        }
+
+        function getFeatureSubtitle(feature) {
+             switch (feature) {
+                case "dashboard": return "Your space: tasks, events, mood & more.";
+                case "ui": return "Customize themes, enjoy smooth visuals.";
+                case "streaks": return "Build habits, stay motivated, feel rewarded.";
+                case "vibes": return "Focus sounds, timers & mood themes.";
+                case "quickadd": return "Add tasks, notes & timers instantly.";
+                case "reflection": return "Track mood, journal thoughts, build awareness.";
+                case "eastereggs": return "Fun surprises & interactions that delight.";
+                case "widgets": return "See key info at a glance on your screen.";
+                default: return defaultSubtitle;
+            }
+        }
+
+        function updateCenterText(title, subtitle) {
+            const displayTitle = typeof title === 'string' ? title : defaultTitle;
+            const displaySubtitle = typeof subtitle === 'string' ? subtitle : defaultSubtitle;
+            orbitCenter.innerHTML = `
+                <div class="feature-orbit-center-title">${displayTitle}</div>
+                <p class="feature-orbit-subtitle">${displaySubtitle}</p>
+            `;
+        }
+
+        function setItemTransform(item, x, y, scale = 1) {
+            const validScale = typeof scale === 'number' && !isNaN(scale) ? scale : 1;
+            item.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${validScale})`;
+        }
+
+        function calculateRadii() {
+            if (orbitCenter.offsetWidth === 0) return false;
+            const centerRadius = orbitCenter.offsetWidth / 2;
+            const itemRadius = orbitItems[0] ? orbitItems[0].offsetWidth / 2 : 35;
+            const gap = 15;
+            orbitRadius = centerRadius + itemRadius + gap;
+            innerRadius = centerRadius - 10;
+            return true;
+        }
+
+        function applyTheme(themeIndex) {
+            const safeIndex = themeIndex % themes.length; // Ensure index stays within bounds
+            const theme = themes[safeIndex];
+             console.log(`Applying theme index: ${safeIndex}`); // Log which theme is applied
+            const rootStyle = document.documentElement.style;
+            for (const [key, value] of Object.entries(theme)) {
+                rootStyle.setProperty(key, value);
+            }
+        }
+
+        function initializeSmallIcons() {
+            smallIconContainer.innerHTML = '';
+            smallIcons.length = 0;
+            if (innerRadius <= 0) return;
+
+            for (let i = 0; i < NUM_SMALL_ICONS; i++) {
+                const element = document.createElement('div');
+                element.classList.add('small-icon');
+                element.innerHTML = smallIconSVGs[i % smallIconSVGs.length];
+
+                const angle = Math.random() * 2 * Math.PI;
+                const radius = Math.random() * innerRadius;
+                const x = radius * Math.cos(angle);
+                const y = radius * Math.sin(angle);
+
+                const velocityAngle = Math.random() * 2 * Math.PI;
+                const dx = Math.cos(velocityAngle) * SMALL_ICON_SPEED;
+                const dy = Math.sin(velocityAngle) * SMALL_ICON_SPEED;
+
+                smallIcons.push({ element, x, y, dx, dy });
+                smallIconContainer.appendChild(element);
+                setItemTransform(element, x, y);
+            }
+             addSmallIconListeners();
+        }
+
+        function calculateInitialPositions() {
+             if (!calculateRadii()) {
+                setTimeout(calculateInitialPositions, 100);
+                return;
+            }
+            const itemCount = orbitItems.length;
+            const angleIncrement = (2 * Math.PI) / itemCount;
+
+            orbitItems.forEach((item, index) => {
+                const angle = index * angleIncrement - Math.PI / 2;
+                item.dataset.initialAngle = angle;
+                item.dataset.targetScale = 1;
+                item.dataset.clickCount = 0; // Initialize click count for theme change
+            });
+
+            initializeSmallIcons();
+        }
+
+        function animateOrbit(timestamp) {
+            const currentGlobalAngle = (timestamp * rotationSpeed) % (2 * Math.PI);
+
+            orbitItems.forEach(item => {
+                const initialAngle = parseFloat(item.dataset.initialAngle);
+                const targetScale = parseFloat(item.dataset.targetScale) || 1;
+                if (!isNaN(initialAngle)) {
+                    const newAngle = initialAngle + currentGlobalAngle;
+                    const x = orbitRadius * Math.cos(newAngle);
+                    const y = orbitRadius * Math.sin(newAngle);
+                    setItemTransform(item, x, y, targetScale);
+                }
+            });
+
+            smallIcons.forEach(icon => {
+                if (icon.element.classList.contains('disrupted')) return;
+
+                icon.x += icon.dx;
+                icon.y += icon.dy;
+
+                const distanceFromCenter = Math.sqrt(icon.x * icon.x + icon.y * icon.y);
+                if (distanceFromCenter > innerRadius) {
+                    const normalX = icon.x / distanceFromCenter;
+                    const normalY = icon.y / distanceFromCenter;
+                    const dotProduct = icon.dx * normalX + icon.dy * normalY;
+                    icon.dx -= 2 * dotProduct * normalX;
+                    icon.dy -= 2 * dotProduct * normalY;
+                    icon.x = normalX * innerRadius;
+                    icon.y = normalY * innerRadius;
+                }
+                 setItemTransform(icon.element, icon.x, icon.y);
+            });
+
+            animationFrameId = requestAnimationFrame(animateOrbit);
+        }
+
+        function resetSmallIcon(icon) {
+            icon.element.classList.remove('disrupted');
+            const angle = Math.random() * 2 * Math.PI;
+            const radius = Math.random() * innerRadius;
+            icon.x = radius * Math.cos(angle);
+            icon.y = radius * Math.sin(angle);
+            const velocityAngle = Math.random() * 2 * Math.PI;
+            icon.dx = Math.cos(velocityAngle) * SMALL_ICON_SPEED;
+            icon.dy = Math.sin(velocityAngle) * SMALL_ICON_SPEED;
+            setItemTransform(icon.element, icon.x, icon.y);
+        }
+
+        function addMainIconListeners() {
+             orbitItems.forEach(item => {
+                item.addEventListener('mouseenter', () => {
+                    const feature = item.dataset.feature;
+                    const title = getFeatureTitle(feature);
+                    const subtitle = getFeatureSubtitle(feature);
+                    updateCenterText(title, subtitle);
+                    orbitContainer.classList.add('is-hovering');
+                    orbitItems.forEach(sibling => {
+                        if (sibling === item) {
+                            sibling.dataset.targetScale = 1.2;
+                            sibling.classList.add('hover-target');
+                        } else {
+                            sibling.dataset.targetScale = 0.9;
+                            sibling.classList.remove('hover-target');
+                        }
+                    });
+                });
+
+                item.addEventListener('mouseleave', () => {
+                    updateCenterText(defaultTitle, defaultSubtitle);
+                    orbitContainer.classList.remove('is-hovering');
+                    orbitItems.forEach(anyItem => {
+                        anyItem.dataset.targetScale = 1;
+                        anyItem.classList.remove('hover-target');
+                    });
+                });
+
+                item.addEventListener('click', (event) => {
+                    const feature = item.dataset.feature;
+
+                    // Theme Switching Logic (on 2nd click)
+                    let count = parseInt(item.dataset.clickCount || 0);
+                    count++;
+                    if (count >= 2) { // Trigger on 2nd click
+                        currentThemeIndex++;
+                        applyTheme(currentThemeIndex);
+                        console.log(`Theme changed by ${feature}. New index: ${currentThemeIndex % themes.length}`);
+                        count = 0; // Reset count after theme change
+                    }
+                    item.dataset.clickCount = count; // Store updated count
+
+                    // Standard Click Effects
+                    console.log(`Clicked on feature: ${feature} (Count: ${item.dataset.clickCount})`);
+                    item.classList.add('active');
+                    updateCenterText(getFeatureTitle(feature), getFeatureSubtitle(feature));
+                    if ("vibrate" in navigator) navigator.vibrate(50);
+                    orbitCenter.classList.add('rotate');
+                    setTimeout(() => orbitCenter.classList.remove('rotate'), 600);
+                    setTimeout(() => {
+                        item.classList.remove('active');
+                        const currentScale = item.matches(':hover') ? 1.2 : 1;
+                        item.dataset.targetScale = currentScale;
+                        if (!item.matches(':hover')) {
+                             updateCenterText(defaultTitle, defaultSubtitle);
+                             orbitItems.forEach(anyItem => {
+                                if (anyItem !== item) anyItem.dataset.targetScale = 1;
+                             });
+                        }
+                    }, 300);
+                });
+            });
+        }
+
+        function addSmallIconListeners() {
+            smallIcons.forEach(icon => {
+                icon.element.addEventListener('click', (event) => {
+                     event.stopPropagation();
+                    icon.element.classList.add('disrupted');
+                     if ("vibrate" in navigator) navigator.vibrate(20);
+                     // Removed sound playback call
+                    setTimeout(() => {
+                       resetSmallIcon(icon);
+                    }, 300);
+                });
+            });
+        }
+
+        function addGlobalListeners() {
+             let resizeTimeout;
+             window.addEventListener('resize', () => {
+                 if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                 clearTimeout(resizeTimeout);
+                 resizeTimeout = setTimeout(() => {
+                     if(calculateRadii()) {
+                         calculateInitialPositions();
+                         if (!document.hidden) {
+                             animationFrameId = requestAnimationFrame(animateOrbit);
+                         }
+                     } else {
+                           console.warn("Resize failed, center dimensions not ready.");
+                     }
+                 }, 250);
+             });
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    if (animationFrameId) {
+                         cancelAnimationFrame(animationFrameId);
+                         animationFrameId = null;
+                    }
+                } else {
+                    if (!animationFrameId) {
+                        if(orbitRadius > 0 || calculateRadii()) {
+                             animationFrameId = requestAnimationFrame(animateOrbit);
+                        } else {
+                             console.warn("Visibility change restart failed, radii not ready.");
+                             init();
+                        }
+                    }
+                }
+            });
+        }
+
+        function init() {
+            applyTheme(currentThemeIndex);
+            updateCenterText(defaultTitle, defaultSubtitle);
+            calculateInitialPositions();
+            addMainIconListeners();
+            addGlobalListeners();
+
+            if (!document.hidden && (orbitRadius > 0 || calculateRadii())) {
+                 animationFrameId = requestAnimationFrame(animateOrbit);
+            } else if (orbitRadius === 0) {
+                 console.warn("Initial animation start delayed, radii not ready.");
+            }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+
+    </script>
+</body>
+</html>
